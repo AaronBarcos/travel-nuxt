@@ -52,9 +52,13 @@
                         <div class="relative">
                             <label class="block text-sm font-semibold mb-2">From</label>
                             <div class="relative">
-                                <input v-model="departureCity" type="text" placeholder="Departure city"
-                                    class="w-full px-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-muted-foreground" />
-                                <span class="absolute right-3 top-3 text-muted-foreground">✈</span>
+                                <select v-model="departureCity" @change="fieldErrors.departureCity = false"
+                                    :class="['w-full px-4 py-3 pr-10 bg-secondary border rounded-lg focus:outline-none focus:ring-2 transition appearance-none cursor-pointer', fieldErrors.departureCity ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20']">
+                                    <option value="" disabled>Selecciona ciudad</option>
+                                    <option v-for="city in spanishCities" :key="city.value" :value="city.value">{{ city.label }}</option>
+                                </select>
+                                <span class="absolute right-10 top-3 text-muted-foreground pointer-events-none">✈</span>
+                                <span class="absolute right-3 top-3 text-muted-foreground pointer-events-none select-arrow">▼</span>
                             </div>
                         </div>
 
@@ -62,9 +66,13 @@
                         <div class="relative">
                             <label class="block text-sm font-semibold mb-2">To</label>
                             <div class="relative">
-                                <input v-model="arrivalCity" type="text" placeholder="Destination city"
-                                    class="w-full px-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-muted-foreground" />
-                                <span class="absolute right-3 top-3 text-muted-foreground">📍</span>
+                                <select v-model="arrivalCity" @change="fieldErrors.arrivalCity = false"
+                                    :class="['w-full px-4 py-3 pr-10 bg-secondary border rounded-lg focus:outline-none focus:ring-2 transition appearance-none cursor-pointer', fieldErrors.arrivalCity ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20']">
+                                    <option value="" disabled>Selecciona ciudad</option>
+                                    <option v-for="city in spanishCities" :key="city.value" :value="city.value">{{ city.label }}</option>
+                                </select>
+                                <span class="absolute right-10 top-3 text-muted-foreground pointer-events-none">📍</span>
+                                <span class="absolute right-3 top-3 text-muted-foreground pointer-events-none select-arrow">▼</span>
                             </div>
                         </div>
 
@@ -72,8 +80,8 @@
                         <div class="relative">
                             <label class="block text-sm font-semibold mb-2">Depart</label>
                             <div class="relative">
-                                <input v-model="departureDate" type="date"
-                                    class="w-full px-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition text-foreground" />
+                                <input v-model="departureDate" @input="fieldErrors.departureDate = false" type="date"
+                                    :class="['w-full px-4 py-3 bg-secondary border rounded-lg focus:outline-none focus:ring-2 transition text-foreground', fieldErrors.departureDate ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20']" />
                             </div>
                         </div>
 
@@ -81,8 +89,8 @@
                         <div class="relative" :class="{ 'opacity-50 pointer-events-none': tripType === 'oneway' }">
                             <label class="block text-sm font-semibold mb-2">Return</label>
                             <div class="relative">
-                                <input v-model="returnDate" type="date" :disabled="tripType === 'oneway'"
-                                    class="w-full px-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition text-foreground disabled:opacity-50" />
+                                <input v-model="returnDate" @input="fieldErrors.returnDate = false" type="date" :disabled="tripType === 'oneway'"
+                                    :class="['w-full px-4 py-3 bg-secondary border rounded-lg focus:outline-none focus:ring-2 transition text-foreground disabled:opacity-50', fieldErrors.returnDate ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20']" />
                             </div>
                         </div>
                     </div>
@@ -151,65 +159,13 @@
                 </div>
 
                 <!-- Results Section -->
-                <div v-if="results && !loading" class="mt-12 space-y-8">
-                    <!-- Flights Results -->
-                    <div v-if="results.flights && results.flights.length > 0">
-                        <h3 class="text-2xl font-bold mb-6">✈️ Vuelos Encontrados</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div v-for="(flight, index) in results.flights" :key="index"
-                                class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition">
-                                <div class="flex items-center justify-between mb-4">
-                                    <span class="text-2xl font-bold">{{ flight.airline }}</span>
-                                    <span class="text-xl font-bold text-primary">{{ formatPrice(flight.price, flight.currency) }}</span>
-                                </div>
-                                <div class="space-y-2 text-sm text-muted-foreground">
-                                    <p><strong class="text-foreground">Salida:</strong> {{ formatDate(flight.departure) }}</p>
-                                    <p><strong class="text-foreground">Llegada:</strong> {{ formatDate(flight.arrival) }}</p>
-                                    <p v-if="flight.duration"><strong class="text-foreground">Duración:</strong> {{ formatDuration(flight.duration) }}</p>
-                                    <p v-if="flight.stops !== undefined">
-                                        <strong class="text-foreground">Escalas:</strong> {{ flight.stops === 0 ? 'Directo' : `${flight.stops} escala(s)` }}
-                                    </p>
-                                    <p v-if="flight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ flight.flightNumber }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Accommodations Results -->
-                    <div v-if="results.accommodations && results.accommodations.length > 0">
-                        <h3 class="text-2xl font-bold mb-6">🏨 Alojamientos Encontrados</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div v-for="(accommodation, index) in results.accommodations" :key="index"
-                                class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-lg font-semibold">{{ accommodation.name }}</h4>
-                                    <span class="text-xl font-bold text-primary">{{ formatPrice(accommodation.price, accommodation.currency) }}</span>
-                                </div>
-                                <div class="space-y-2 text-sm text-muted-foreground mb-4">
-                                    <p v-if="accommodation.rating">
-                                        <span class="text-yellow-500">★</span> {{ accommodation.rating }}/5
-                                    </p>
-                                    <p v-if="accommodation.address"><strong class="text-foreground">Dirección:</strong> {{ accommodation.address }}</p>
-                                    <p v-if="accommodation.type"><strong class="text-foreground">Tipo:</strong> {{ accommodation.type }}</p>
-                                </div>
-                                <div v-if="accommodation.amenities && accommodation.amenities.length > 0" class="flex flex-wrap gap-2">
-                                    <span v-for="(amenity, amenityIndex) in accommodation.amenities.slice(0, 5)" :key="amenityIndex"
-                                        class="px-2 py-1 bg-secondary rounded-md text-xs">
-                                        {{ amenity }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- No Results -->
-                    <!-- <div v-if="(!results.flights || results.flights.length === 0) && (!results.accommodations || results.accommodations.length === 0)"
-                        class="text-center py-12 bg-card border border-border rounded-xl">
-                        <p class="text-muted-foreground">No se encontraron resultados. Intenta con otros parámetros.</p>
-                    </div> -->
-                    <div v-if="resultText" class="mt-12 bg-card border border-border rounded-lg p-4">
-                        <p class="text-muted-foreground">{{ resultText }}</p>
-                    </div>
+                <div ref="resultsRef">
+                    <TravelResult 
+                        v-if="loading || error || results"
+                        :state="loading ? 'loading' : (error ? 'error' : 'success')"
+                        :results="results"
+                        :error="error || undefined"
+                    />
                 </div>
             </div>
         </main>
@@ -217,6 +173,35 @@
 </template>
 
 <script setup lang="ts">
+const spanishCities = [
+    { value: 'Madrid', label: 'Madrid (MAD)' },
+    { value: 'Barcelona', label: 'Barcelona (BCN)' },
+    { value: 'Valencia', label: 'Valencia (VLC)' },
+    { value: 'Sevilla', label: 'Sevilla (SVQ)' },
+    { value: 'Málaga', label: 'Málaga (AGP)' },
+    { value: 'Bilbao', label: 'Bilbao (BIO)' },
+    { value: 'Palma de Mallorca', label: 'Palma de Mallorca (PMI)' },
+    { value: 'Alicante', label: 'Alicante (ALC)' },
+    { value: 'Las Palmas de Gran Canaria', label: 'Las Palmas de Gran Canaria (LPA)' },
+    { value: 'Tenerife Norte', label: 'Tenerife Norte (TFN)' },
+    { value: 'Tenerife Sur', label: 'Tenerife Sur (TFS)' },
+    { value: 'Ibiza', label: 'Ibiza (IBZ)' },
+    { value: 'Menorca', label: 'Menorca (MAH)' },
+    { value: 'Santander', label: 'Santander (SDR)' },
+    { value: 'Asturias', label: 'Asturias (OVD)' },
+    { value: 'A Coruña', label: 'A Coruña (LCG)' },
+    { value: 'Vigo', label: 'Vigo (VGO)' },
+    { value: 'Santiago de Compostela', label: 'Santiago de Compostela (SCQ)' },
+    { value: 'Zaragoza', label: 'Zaragoza (ZAZ)' },
+    { value: 'Murcia', label: 'Murcia (RMU)' },
+    { value: 'Jerez', label: 'Jerez (XRY)' },
+    { value: 'Almería', label: 'Almería (LEI)' },
+    { value: 'Reus', label: 'Reus (REU)' },
+    { value: 'Girona', label: 'Girona (GRO)' },
+    { value: 'Lanzarote', label: 'Lanzarote (ACE)' },
+    { value: 'Fuerteventura', label: 'Fuerteventura (FUE)' }
+]
+
 const tripType = ref('roundtrip')
 const departureCity = ref('')
 const arrivalCity = ref('')
@@ -225,11 +210,21 @@ const returnDate = ref('')
 const includeAccommodation = ref(false)
 const loading = ref(false)
 const results = ref<{
-    flights: any[];
+    flightsCombination: {
+        departureFlight: any;
+        returnFlight: any;
+    };
     accommodations: any[];
+    summary: string;
 } | null>(null)
-const resultText = ref<string | null>(null)
 const error = ref<string | null>(null)
+const resultsRef = ref<HTMLElement | null>(null)
+const fieldErrors = ref({
+    departureCity: false,
+    arrivalCity: false,
+    departureDate: false,
+    returnDate: false
+})
 
 const resetForm = () => {
     tripType.value = 'roundtrip'
@@ -239,24 +234,61 @@ const resetForm = () => {
     returnDate.value = ''
     includeAccommodation.value = false
     results.value = null
-    resultText.value = null
     error.value = null
+    fieldErrors.value = {
+        departureCity: false,
+        arrivalCity: false,
+        departureDate: false,
+        returnDate: false
+    }
 }
 
 const searchTrips = async () => {
-    if (!departureCity.value || !arrivalCity.value || !departureDate.value) {
-        error.value = 'Por favor, completa todos los campos requeridos'
-        return
+    // Resetear errores de campos
+    fieldErrors.value = {
+        departureCity: false,
+        arrivalCity: false,
+        departureDate: false,
+        returnDate: false
+    }
+
+    // Validar campos requeridos
+    let hasErrors = false
+    
+    if (!departureCity.value) {
+        fieldErrors.value.departureCity = true
+        hasErrors = true
+    }
+    
+    if (!arrivalCity.value) {
+        fieldErrors.value.arrivalCity = true
+        hasErrors = true
+    }
+    
+    if (!departureDate.value) {
+        fieldErrors.value.departureDate = true
+        hasErrors = true
     }
 
     if (tripType.value === 'roundtrip' && !returnDate.value) {
-        error.value = 'Por favor, selecciona una fecha de regreso'
+        fieldErrors.value.returnDate = true
+        hasErrors = true
+    }
+
+    if (hasErrors) {
+        error.value = 'Por favor, completa todos los campos requeridos'
         return
     }
 
     loading.value = true
     error.value = null
     results.value = null
+
+    // Scroll suave a los resultados inmediatamente
+    await nextTick()
+    if (resultsRef.value) {
+        resultsRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
 
     try {
         const { data: responseData, error: fetchError } = await useFetch('/api/test', {
@@ -280,19 +312,10 @@ const searchTrips = async () => {
                 
                 if (outputText) {
                     // Parsear el JSON string
-                    const parsedData = JSON.parse(outputText)
+                    const travelRecommendation = JSON.parse(outputText)
                     
-                    // Asignar los vuelos recomendados
-                    if (parsedData.recommendedFlights && Array.isArray(parsedData.recommendedFlights)) {
-                        results.value = {
-                            flights: parsedData.recommendedFlights,
-                            accommodations: []
-                        }
-                    }
-                    
-                    // Asignar el resumen
-                    if (parsedData.summary) {
-                        resultText.value = parsedData.summary
+                    if (travelRecommendation) {
+                        results.value = travelRecommendation
                     }
                 } else {
                     error.value = 'No se recibieron datos de la respuesta'
@@ -309,34 +332,6 @@ const searchTrips = async () => {
     }
 }
 
-const formatDate = (dateString: string) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('es-ES', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
-
-const formatDuration = (duration: string) => {
-    if (!duration) return ''
-    // PT2H15M -> 2h 15m
-    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/)
-    if (!match) return duration
-    const hours = match[1] ? `${match[1]}h` : ''
-    const minutes = match[2] ? `${match[2]}m` : ''
-    return `${hours} ${minutes}`.trim()
-}
-
-const formatPrice = (price: number, currency: string = 'EUR') => {
-    return new Intl.NumberFormat('es-ES', {
-        style: 'currency',
-        currency: currency
-    }).format(price)
-}
 </script>
 
 <style scoped>
@@ -352,5 +347,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 input[type="date"]:hover::-webkit-calendar-picker-indicator {
     opacity: 1;
+}
+
+/* Select arrow styling */
+.select-arrow {
+    font-size: 0.75rem;
+    opacity: 0.6;
 }
 </style>

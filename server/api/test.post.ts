@@ -19,33 +19,56 @@ const Flight = z.object({
     aircraft: z.string().describe('Código del avión')
 });
 
+const Accommodation = z.object({
+    name: z.string().describe('Nombre del alojamiento'),
+    price: z.number().describe('Precio del alojamiento'),
+    currency: z.string().describe('Moneda del precio'),
+    rating: z.number().describe('Puntuación del alojamiento'),
+    address: z.string().describe('Dirección del alojamiento'),
+    amenities: z.array(z.string()).describe('Amenidades del alojamiento'),
+});
+
 // Esquema Zod para las recomendaciones de vuelos
-const FlightRecommendations = z.object({
-    recommendedFlights: z.array(Flight).describe('Lista de vuelos recomendados'),
-    summary: z.string().describe('Resumen de las recomendaciones de vuelos')
+const TravelRecommendation = z.object({
+    flightsCombination: z.object({
+        departureFlight: Flight.describe('Vuelo de ida recomendado'),
+        returnFlight: Flight.nullable().optional().describe('Vuelo de vuelta recomendado')
+    }).describe('Vuelo de ida y vuelta recomendados'),
+    accommodations: Accommodation.describe('Alojamiento recomendado'),
+    summary: z.string().describe('Resumen de las recomendaciones de vuelos y alojamientos')
 });
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
     const { departureCity, arrivalCity, departureDate, returnDate, tripType, includeAccommodation } = body;
 
-    if (!departureCity || !arrivalCity || !departureDate || !returnDate) {
+    if (!departureCity || !arrivalCity || !departureDate) {
         throw createError({
             statusCode: 400,
-            message: 'Faltan campos requeridos: departureCity, arrivalCity, departureDate, returnDate'
+            message: 'Faltan campos requeridos: departureCity, arrivalCity, departureDate'
         });
     }
 
+    let systemInstruction = `Eres un asistente experto en planificación de viajes. Analiza los datos de vuelos del MCP server y proporciona recomendaciones estructuradas. Debes proporcionar la combinación más económica de vuelos, siempre que el viaje sea factible.`;  
+    let userInput = `I want to travel from ${departureCity} to ${arrivalCity} on ${departureDate}`;
+    if (returnDate) {
+        userInput += ` and return on ${returnDate}`;
+    }
+    if (includeAccommodation) {
+        systemInstruction += ' Añade recomendaciones de alojamientos, siempre que el viaje sea factible.';
+        userInput += ' and include accommodation recommendations.';
+    }
+
     const response = await openaiClient.responses.create({
-        model: 'gpt-5',
+        model: 'gpt-5.1',
         input: [
             {
                 role: 'system',
-                content: 'Eres un asistente experto en planificación de viajes. Analiza los datos de vuelos del MCP server y proporciona recomendaciones estructuradas.'
+                content: systemInstruction
             },
             {
                 role: 'user',
-                content: `I want to travel from ${departureCity} to ${arrivalCity} on ${departureDate} and return on ${returnDate}. ${includeAccommodation ? 'Also include accommodation recommendations.' : ''}`
+                content: userInput
             }
         ],
         tools: [
@@ -58,7 +81,7 @@ export default defineEventHandler(async (event) => {
             }
         ],
         text: {
-            format: zodTextFormat(FlightRecommendations, 'flight_recommendations')
+            format: zodTextFormat(TravelRecommendation, 'travel_recommendation')
         }
     });
 
