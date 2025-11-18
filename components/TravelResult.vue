@@ -1,42 +1,79 @@
 <template>
     <div class="mt-12 space-y-8">
         <!-- Loading Skeleton -->
-        <div v-if="state === 'loading'" class="space-y-8">
+        <div v-if="state === 'loading'" class="space-y-10">
+            <!-- Hero Skeleton -->
+            <div class="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 text-center">
+                <div class="h-4 w-24 bg-secondary animate-pulse rounded mx-auto mb-3"></div>
+                <div class="h-8 w-3/4 bg-secondary animate-pulse rounded mx-auto mb-4"></div>
+                <div class="h-4 w-2/3 bg-secondary animate-pulse rounded mx-auto"></div>
+            </div>
+
             <!-- Flights Skeleton -->
-            <div>
-                <div class="h-8 w-64 bg-secondary animate-pulse rounded mb-6"></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="i in 3" :key="i" class="bg-card border border-border rounded-xl p-6">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-secondary animate-pulse rounded-lg"></div>
+                    <div class="space-y-2 flex-1">
+                        <div class="h-4 w-32 bg-secondary animate-pulse rounded"></div>
+                        <div class="h-6 w-60 bg-secondary animate-pulse rounded"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div v-for="i in 2" :key="`flight-${i}`" class="bg-card border border-border rounded-xl p-6">
+                        <div class="h-4 w-24 bg-secondary animate-pulse rounded mb-3"></div>
                         <div class="flex items-center justify-between mb-4">
-                            <div class="h-8 w-32 bg-secondary animate-pulse rounded"></div>
-                            <div class="h-8 w-24 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-6 w-32 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-6 w-24 bg-secondary animate-pulse rounded"></div>
                         </div>
                         <div class="space-y-2">
-                            <div class="h-4 w-full bg-secondary animate-pulse rounded"></div>
                             <div class="h-4 w-3/4 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-3/5 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-1/2 bg-secondary animate-pulse rounded"></div>
                             <div class="h-4 w-2/3 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-1/3 bg-secondary animate-pulse rounded"></div>
                         </div>
                     </div>
                 </div>
             </div>
+
             <!-- Accommodations Skeleton -->
-            <div>
-                <div class="h-8 w-64 bg-secondary animate-pulse rounded mb-6"></div>
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-secondary animate-pulse rounded-lg"></div>
+                    <div class="space-y-2 flex-1">
+                        <div class="h-4 w-40 bg-secondary animate-pulse rounded"></div>
+                        <div class="h-6 w-72 bg-secondary animate-pulse rounded"></div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="i in 3" :key="i" class="bg-card border border-border rounded-xl p-6">
+                    <div v-for="i in 3" :key="`accommodation-${i}`" class="bg-card border border-border rounded-xl p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="h-6 w-40 bg-secondary animate-pulse rounded"></div>
-                            <div class="h-6 w-24 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-5 w-32 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-5 w-20 bg-secondary animate-pulse rounded"></div>
                         </div>
                         <div class="space-y-2 mb-4">
-                            <div class="h-4 w-20 bg-secondary animate-pulse rounded"></div>
-                            <div class="h-4 w-full bg-secondary animate-pulse rounded"></div>
-                            <div class="h-4 w-32 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-24 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-3/4 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-1/2 bg-secondary animate-pulse rounded"></div>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <div class="h-6 w-16 bg-secondary animate-pulse rounded"></div>
-                            <div class="h-6 w-20 bg-secondary animate-pulse rounded"></div>
-                            <div class="h-6 w-14 bg-secondary animate-pulse rounded"></div>
+                            <div v-for="chip in 3" :key="chip" class="h-6 w-16 bg-secondary animate-pulse rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Skeleton -->
+            <div class="bg-card border border-border rounded-2xl p-8">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-secondary animate-pulse rounded-xl flex-shrink-0"></div>
+                    <div class="flex-1 space-y-3">
+                        <div class="h-4 w-32 bg-secondary animate-pulse rounded"></div>
+                        <div class="h-6 w-64 bg-secondary animate-pulse rounded"></div>
+                        <div class="space-y-2">
+                            <div class="h-4 w-full bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-5/6 bg-secondary animate-pulse rounded"></div>
+                            <div class="h-4 w-2/3 bg-secondary animate-pulse rounded"></div>
                         </div>
                     </div>
                 </div>
@@ -44,80 +81,74 @@
         </div>
 
         <!-- Success Results -->
-        <div v-if="state === 'success'" class="space-y-8">
-            <!-- Summary Section -->
-            <div v-if="resultText" class="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8">
-                <div class="flex items-start gap-4">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <span class="text-2xl">📋</span>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold mb-3 text-foreground">Resumen de Recomendaciones</h3>
-                        <p class="text-muted-foreground leading-relaxed whitespace-pre-line">{{ resultText }}</p>
-                    </div>
-                </div>
+        <div v-if="state === 'success'" class="space-y-10">
+            <!-- Hero Title -->
+            <div class="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-8 text-center">
+                <p class="text-sm uppercase tracking-wide text-primary font-semibold mb-2">Resultados</p>
+                <h2 class="text-3xl font-bold text-foreground">¡Hemos encontrado la mejor combinación para tu viaje!</h2>
+                <p class="text-muted-foreground mt-3">Analizamos los vuelos y alojamientos disponibles para proponerte la opción más conveniente.</p>
             </div>
 
             <!-- Flights Results -->
-            <div v-if="departureFlight || returnFlight" class="space-y-8">
-                <!-- Outbound Flight -->
-                <div v-if="departureFlight">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <span class="text-xl">✈️</span>
-                        </div>
-                        <h3 class="text-2xl font-bold">Vuelo de ida</h3>
+            <div v-if="departureFlight || returnFlight" class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">✈️</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition shadow-sm">
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="text-2xl font-bold">{{ departureFlight.airline }}</span>
-                                <span class="text-xl font-bold text-primary">{{ formatPrice(departureFlight.price, departureFlight.currency) }}</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-muted-foreground">
-                                <p><strong class="text-foreground">Salida:</strong> {{ formatDate(departureFlight.departure) }}</p>
-                                <p><strong class="text-foreground">Llegada:</strong> {{ formatDate(departureFlight.arrival) }}</p>
-                                <p v-if="departureFlight.duration"><strong class="text-foreground">Duración:</strong> {{ formatDuration(departureFlight.duration) }}</p>
-                                <p v-if="departureFlight.stops !== undefined">
-                                    <strong class="text-foreground">Escalas:</strong> {{ departureFlight.stops === 0 ? 'Directo' : `${departureFlight.stops} escala(s)` }}
-                                </p>
-                                <p v-if="departureFlight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ departureFlight.flightNumber }}</p>
-                            </div>
-                        </div>
+                    <div>
+                        <p class="text-sm uppercase tracking-wide text-primary font-semibold">Vuelos recomendados</p>
+                        <h3 class="text-2xl font-bold">La combinación más eficiente para tu viaje</h3>
                     </div>
                 </div>
 
-                <!-- Return Flight -->
-                <div v-if="returnFlight">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <span class="text-xl">🔄</span>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div v-if="departureFlight" class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition shadow-sm">
+                        <p class="text-sm font-semibold text-primary mb-2">Vuelo de ida</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold">{{ departureFlight.airline }}</span>
+                            <span class="text-xl font-bold text-primary">{{ formatPrice(departureFlight.price, departureFlight.currency) }}</span>
                         </div>
-                        <h3 class="text-2xl font-bold">Vuelo de vuelta</h3>
+                        <div class="space-y-2 text-sm text-muted-foreground">
+                            <p><strong class="text-foreground">Salida:</strong> {{ formatDate(departureFlight.departure) }}</p>
+                            <p><strong class="text-foreground">Llegada:</strong> {{ formatDate(departureFlight.arrival) }}</p>
+                            <p v-if="departureFlight.duration"><strong class="text-foreground">Duración:</strong> {{ formatDuration(departureFlight.duration) }}</p>
+                            <p v-if="departureFlight.stops !== undefined">
+                                <strong class="text-foreground">Escalas:</strong> {{ departureFlight.stops === 0 ? 'Directo' : `${departureFlight.stops} escala(s)` }}
+                            </p>
+                            <p v-if="departureFlight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ departureFlight.flightNumber }}</p>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition shadow-sm">
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="text-2xl font-bold">{{ returnFlight.airline }}</span>
-                                <span class="text-xl font-bold text-primary">{{ formatPrice(returnFlight.price, returnFlight.currency) }}</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-muted-foreground">
-                                <p><strong class="text-foreground">Salida:</strong> {{ formatDate(returnFlight.departure) }}</p>
-                                <p><strong class="text-foreground">Llegada:</strong> {{ formatDate(returnFlight.arrival) }}</p>
-                                <p v-if="returnFlight.duration"><strong class="text-foreground">Duración:</strong> {{ formatDuration(returnFlight.duration) }}</p>
-                                <p v-if="returnFlight.stops !== undefined">
-                                    <strong class="text-foreground">Escalas:</strong> {{ returnFlight.stops === 0 ? 'Directo' : `${returnFlight.stops} escala(s)` }}
-                                </p>
-                                <p v-if="returnFlight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ returnFlight.flightNumber }}</p>
-                            </div>
+
+                    <div v-if="returnFlight" class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition shadow-sm">
+                        <p class="text-sm font-semibold text-primary mb-2">Vuelo de vuelta</p>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-2xl font-bold">{{ returnFlight.airline }}</span>
+                            <span class="text-xl font-bold text-primary">{{ formatPrice(returnFlight.price, returnFlight.currency) }}</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-muted-foreground">
+                            <p><strong class="text-foreground">Salida:</strong> {{ formatDate(returnFlight.departure) }}</p>
+                            <p><strong class="text-foreground">Llegada:</strong> {{ formatDate(returnFlight.arrival) }}</p>
+                            <p v-if="returnFlight.duration"><strong class="text-foreground">Duración:</strong> {{ formatDuration(returnFlight.duration) }}</p>
+                            <p v-if="returnFlight.stops !== undefined">
+                                <strong class="text-foreground">Escalas:</strong> {{ returnFlight.stops === 0 ? 'Directo' : `${returnFlight.stops} escala(s)` }}
+                            </p>
+                            <p v-if="returnFlight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ returnFlight.flightNumber }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Accommodations Results -->
-            <div v-if="accommodationsList && accommodationsList.length > 0">
-                <h3 class="text-2xl font-bold mb-6">🏨 Alojamientos Encontrados</h3>
+            <div v-if="accommodationsList && accommodationsList.length > 0" class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                        <span class="text-xl">🏨</span>
+                    </div>
+                    <div>
+                        <p class="text-sm uppercase tracking-wide text-primary font-semibold">Alojamientos recomendados</p>
+                        <h3 class="text-2xl font-bold">Opciones para completar tu experiencia</h3>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div v-for="(accommodation, index) in accommodationsList" :key="index"
                         class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition">
@@ -141,27 +172,35 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Error State -->
-        <div v-if="state === 'error'">
-            <p class="text-destructive">{{ error }}</p>
+            <!-- Summary Section -->
+            <div v-if="resultText" class="bg-card border border-border rounded-2xl p-8 shadow-sm">
+                <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span class="text-2xl">📋</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm uppercase tracking-wide text-primary font-semibold mb-2">Resumen del viaje</p>
+                        <h3 class="text-xl font-bold mb-3 text-foreground">Justificación de la combinación</h3>
+                        <p class="text-muted-foreground leading-relaxed whitespace-pre-line">{{ resultText }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import type { Accommodation, Flight, TravelRecommendation } from '~/types/travel'
 
 interface TravelResultProps {
-    state: 'loading' | 'success' | 'error';
-    results?: any;
-    error?: string;
+    state: 'loading' | 'success';
+    results?: TravelRecommendation | null;
 }
 
 const {
     state,
     results,
-    error
 } = defineProps<TravelResultProps>();
 
 // Extraer datos de la estructura de respuesta
@@ -169,19 +208,18 @@ const resultText = computed(() => {
     return results?.summary || ''
 })
 
-const departureFlight = computed(() => {
+const departureFlight = computed<Flight | null>(() => {
     return results?.flightsCombination?.departureFlight || null
 })
 
-const returnFlight = computed(() => {
+const returnFlight = computed<Flight | null>(() => {
     return results?.flightsCombination?.returnFlight || null
 })
 
-const accommodationsList = computed(() => {
+const accommodationsList = computed<Accommodation[]>(() => {
     if (!results?.accommodations) return []
-    // Manejar tanto array como objeto único
-    return Array.isArray(results.accommodations) 
-        ? results.accommodations 
+    return Array.isArray(results.accommodations)
+        ? results.accommodations
         : [results.accommodations]
 })
 
