@@ -70,6 +70,9 @@ const route = useRoute()
 const loading = ref(true)
 const error = ref<string | null>(null)
 const results = ref<TravelRecommendation | null>(null)
+const supabase = useSupabaseClient()
+const supabaseUser = useSupabaseUser()
+const { consumeCredit, refreshCredits } = useCredits()
 
 const isTripType = (value: unknown): value is TravelSearchInput['tripType'] => {
     return value === 'roundtrip' || value === 'oneway'
@@ -136,18 +139,42 @@ const fetchResults = async () => {
     results.value = null
 
     try {
-        const body: TravelSearchInput = {
+        // Consumir crédito antes de buscar (solo para usuarios no logueados)
+        // Los usuarios logueados consumen créditos en el servidor
+        let creditConsumed = false
+        if (!supabaseUser.value) {
+            const creditResult = await consumeCredit()
+            if (!creditResult.success) {
+                error.value = creditResult.error || 'No tienes créditos suficientes'
+                loading.value = false
+                return
+            }
+            creditConsumed = true
+        }
+
+        const body: TravelSearchInput & { _creditConsumed?: boolean } = {
             departureCity: queryParams.value.departureCity,
             arrivalCity: queryParams.value.arrivalCity,
             departureDate: queryParams.value.departureDate,
             tripType: queryParams.value.tripType,
             includeAccommodation: queryParams.value.includeAccommodation,
-            returnDate: queryParams.value.tripType === 'roundtrip' ? queryParams.value.returnDate : undefined
+            returnDate: queryParams.value.tripType === 'roundtrip' ? queryParams.value.returnDate : undefined,
+            _creditConsumed: creditConsumed
+        }
+
+        // Obtener token de sesión para usuarios logueados
+        const headers: Record<string, string> = {}
+        if (supabaseUser.value) {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session?.access_token) {
+                headers['authorization'] = `Bearer ${session.access_token}`
+            }
         }
 
         const response = await $fetch('/api/test', {
             method: 'POST',
-            body
+            body,
+            headers
         })
 
         const outputText = (response as any)?.output_text
@@ -166,8 +193,13 @@ const fetchResults = async () => {
     } catch (fetchError: any) {
         const message = fetchError?.data?.message || fetchError?.message || 'Error al buscar viajes.'
         error.value = message
+        // Si falla y es usuario no logueado, restaurar crédito
+        if (!supabaseUser.value) {
+            await refreshCredits()
+        }
     } finally {
         loading.value = false
+        await refreshCredits()
     }
 }
 

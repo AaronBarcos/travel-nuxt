@@ -1,13 +1,6 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
-  "compilerOptions": {
-    "types": [
-      "node"
-    ]
-  },
-  "files": [
-    "types/supabase.d.ts"
-  ],
+  "files": [],
   "references": [
     {
       "path": "./.nuxt/tsconfig.app.json"

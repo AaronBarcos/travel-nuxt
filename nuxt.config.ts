@@ -4,6 +4,24 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['nuxt-mcp', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/main.css'],
+  nitro: {
+    esbuild: {
+      options: {
+        target: 'node18'
+      }
+    },
+    experimental: {
+      wasm: true
+    },
+    externals: {
+      inline: ['@supabase/supabase-js']
+    }
+  },
+  vite: {
+    optimizeDeps: {
+      include: ['@supabase/supabase-js']
+    }
+  },
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY,
     travelMcpUrl: process.env.TRAVEL_MCP_URL || 'https://travel-mcp.onrender.com/mcp',

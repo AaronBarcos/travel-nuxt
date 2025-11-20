@@ -35,6 +35,16 @@
               <p class="text-sm text-muted-foreground mb-1">Cuenta creada</p>
               <p class="font-medium">{{ formatDate(user?.created_at) }}</p>
             </div>
+            <div class="pt-3 border-t border-border">
+              <p class="text-sm text-muted-foreground mb-1">Créditos disponibles</p>
+              <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold">{{ credits }}</span>
+                <span class="text-sm text-muted-foreground">búsqueda{{ credits !== 1 ? 's' : '' }} restante{{ credits !== 1 ? 's' : '' }}</span>
+              </div>
+              <p class="text-xs text-muted-foreground mt-2">
+                Cada búsqueda consume 1 crédito. Los nuevos usuarios reciben 2 créditos gratis al registrarse.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -63,6 +73,7 @@ const { brand } = useAppConfig()
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const router = useRouter()
+const { credits, refreshCredits } = useCredits()
 
 useSeoMeta({
   title: `Mi perfil | ${brand.name}`,
@@ -83,5 +94,9 @@ const handleLogout = async () => {
   await supabase.auth.signOut()
   await router.push('/')
 }
+
+onMounted(() => {
+  refreshCredits()
+})
 </script>
 

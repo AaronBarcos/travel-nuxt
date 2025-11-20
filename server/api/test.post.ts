@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
+import { createClient } from '@supabase/supabase-js'
 import {
   TravelRecommendationSchema,
   TravelSearchSchema
@@ -20,9 +21,50 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await readBody(event)
+  const rawBody = await readBody(event)
+  const { _creditConsumed, ...searchBody } = rawBody as any
+  
+  // Verificar y consumir créditos
+  const supabase = createClient(
+    config.public.supabaseUrl,
+    config.public.supabaseAnonKey
+  )
+
+  // Obtener token de autorización del header
+  const authHeader = event.headers.get('authorization')
+  if (authHeader) {
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
+    if (!authError && user) {
+      // Usuario logueado: consumir crédito desde la base de datos
+      const { data, error } = await supabase.rpc('consume_user_credit', {
+        user_id_param: user.id
+      })
+
+      if (error) {
+        if (error.code === 'P0001') {
+          throw createError({
+            statusCode: 403,
+            message: 'No tienes créditos suficientes para realizar esta búsqueda'
+          })
+        }
+        throw createError({
+          statusCode: 500,
+          message: 'Error al verificar créditos'
+        })
+      }
+    }
+  } else if (_creditConsumed !== true) {
+    // Usuario no logueado: debe haber consumido el crédito en el cliente
+    throw createError({
+      statusCode: 403,
+      message: 'No tienes créditos suficientes para realizar esta búsqueda'
+    })
+  }
+  
   const { departureCity, arrivalCity, departureDate, returnDate, tripType, includeAccommodation } =
-    TravelSearchSchema.parse(body)
+    TravelSearchSchema.parse(searchBody)
 
   let systemInstruction =
     'Eres un asistente experto en planificación de viajes. Analiza los datos del servidor MCP y proporciona recomendaciones estructuradas. Debes proporcionar la combinación más económica de vuelos, siempre que el viaje sea factible.'

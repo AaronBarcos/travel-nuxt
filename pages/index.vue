@@ -9,7 +9,13 @@
                     </div>
                     <h1 class="text-xl font-semibold">{{ brand.name }}</h1>
                 </div>
-                <AuthNav />
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-secondary border border-border rounded-lg">
+                        <span class="text-sm font-medium">💳</span>
+                        <span class="text-sm font-semibold">{{ credits }} crédito{{ credits !== 1 ? 's' : '' }}</span>
+                    </div>
+                    <AuthNav />
+                </div>
             </div>
         </nav>
 
@@ -25,6 +31,9 @@
                         Descubre recomendaciones personalizadas impulsadas por IA avanzada. Compara vuelos, hoteles y experiencias en segundos.
                     </p>
                 </div>
+
+                <!-- Credits Banner -->
+                <CreditsBanner />
 
                 <!-- Search Form -->
                 <div class="bg-card border border-border rounded-2xl p-8 shadow-lg">
@@ -110,16 +119,29 @@
                                 class="px-6 py-3 bg-secondary text-foreground border border-border rounded-lg font-semibold hover:bg-secondary/80 hover:shadow-lg transition-all duration-200 whitespace-nowrap">
                                 Reiniciar
                             </button>
-                            <button @click="searchTrips" :disabled="loading"
+                            <button @click="searchTrips" :disabled="loading || credits <= 0"
                                 class="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 hover:shadow-lg transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
-                                {{ loading ? 'Buscando...' : 'Buscar con IA' }}
+                                {{ loading ? 'Buscando...' : credits <= 0 ? 'Sin créditos' : 'Buscar con IA' }}
                             </button>
                         </div>
                     </div>
 
                     <!-- Error Message -->
                     <div v-if="error" class="mt-8 bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-                        <p class="text-destructive text-sm">{{ error }}</p>
+                        <p class="text-destructive text-sm font-medium mb-2">{{ error }}</p>
+                        <p v-if="credits <= 0 && !supabaseUser" class="text-sm text-muted-foreground">
+                            <NuxtLink to="/register" class="text-primary hover:underline">Crea una cuenta</NuxtLink> para obtener más créditos o espera 24 horas para que se renueven.
+                        </p>
+                    </div>
+
+                    <!-- Info Message cuando quedan pocos créditos -->
+                    <div v-if="credits > 0 && credits <= 2 && !error" class="mt-8 bg-primary/10 border border-primary/20 rounded-lg p-4">
+                        <p class="text-sm text-foreground">
+                            <span class="font-semibold">⚠️ Te quedan {{ credits }} crédito{{ credits !== 1 ? 's' : '' }}.</span>
+                            <span v-if="!supabaseUser" class="ml-2">
+                                <NuxtLink to="/register" class="text-primary hover:underline font-medium">Crea una cuenta</NuxtLink> para obtener más créditos.
+                            </span>
+                        </p>
                     </div>
 
                     <!-- Recent Searches -->
@@ -238,6 +260,7 @@ const spanishCities = [
 const router = useRouter()
 const supabase = useSupabaseClient()
 const supabaseUser = useSupabaseUser()
+const { credits, consumeCredit, refreshCredits } = useCredits()
 
 type TripType = 'roundtrip' | 'oneway'
 
@@ -514,6 +537,12 @@ const searchTrips = async () => {
 
     if (hasErrors) {
         error.value = 'Por favor, completa todos los campos requeridos'
+        return
+    }
+
+    // Verificar créditos antes de buscar
+    if (credits.value <= 0) {
+        error.value = 'No tienes créditos suficientes para realizar esta búsqueda. Por favor, inicia sesión para obtener más créditos.'
         return
     }
 
