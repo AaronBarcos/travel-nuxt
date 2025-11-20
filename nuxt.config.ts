@@ -2,20 +2,15 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['nuxt-mcp', '@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
+  modules: ['nuxt-mcp', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY,
     travelMcpUrl: process.env.TRAVEL_MCP_URL || 'https://travel-mcp.onrender.com/mcp',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://skyai.travel'
-    }
-  },
-  supabase: {
-    redirectOptions: {
-      login: '/login',
-      callback: '/',
-      exclude: ['/']
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://skyai.travel',
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
+      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || ''
     }
   },
   app: {

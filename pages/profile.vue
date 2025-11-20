@@ -40,7 +40,6 @@
 
         <!-- Acciones -->
         <div class="bg-card border border-border rounded-2xl p-8">
-          <h3 class="text-xl font-semibold mb-4">Acciones</h3>
           <div class="space-y-3">
             <button
               @click="handleLogout"

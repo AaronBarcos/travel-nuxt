@@ -122,6 +122,31 @@
                         <p class="text-destructive text-sm">{{ error }}</p>
                     </div>
 
+                    <!-- Recent Searches -->
+                    <ClientOnly>
+                        <div v-if="recentSearches.length" class="mt-8">
+                            <p class="text-sm text-muted-foreground mb-3 font-medium">🕘 Tus últimas búsquedas</p>
+                            <div class="flex flex-col gap-4 md:flex-row">
+                                <div v-for="search in recentSearches" :key="search.id || search.createdAt || `${search.departureCity}-${search.arrivalCity}-${search.departureDate}`"
+                                    @click="fillFormFromSearch(search)"
+                                    class="flex-1 bg-secondary/60 border border-border rounded-xl p-4 shadow-sm hover:border-primary/40 hover:bg-secondary/80 cursor-pointer transition">
+                                    <div class="flex items-center justify-between text-sm font-semibold mb-1">
+                                        <span>{{ search.departureCity }} → {{ search.arrivalCity }}</span>
+                                        <span>{{ formatSearchDate(search.departureDate) }}</span>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ search.tripType === 'roundtrip' ? 'Ida y vuelta' : 'Solo ida' }} ·
+                                        {{ search.includeAccommodation ? 'Con alojamientos' : 'Solo vuelos' }}
+                                    </p>
+                                    <p v-if="search.tripType === 'roundtrip' && search.returnDate"
+                                        class="text-xs text-muted-foreground mt-1">
+                                        Regreso {{ formatSearchDate(search.returnDate) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </ClientOnly>
+
                     <!-- Travel Tips -->
                     <div class="mt-8 pt-8 border-t border-border">
                         <p class="text-sm text-muted-foreground mb-3 font-medium">✨ Consejos de viaje con IA</p>
@@ -211,8 +236,26 @@ const spanishCities = [
 ]
 
 const router = useRouter()
+const supabase = useSupabaseClient()
+const supabaseUser = useSupabaseUser()
 
-const tripType = ref('roundtrip')
+type TripType = 'roundtrip' | 'oneway'
+
+type RecentTravelSearch = {
+    id?: string
+    departureCity: string
+    arrivalCity: string
+    departureDate: string
+    returnDate: string | null
+    tripType: TripType
+    includeAccommodation: boolean
+    createdAt?: string
+}
+
+const MAX_RECENT_SEARCHES = 3
+const RECENT_SEARCHES_STORAGE_KEY = 'travel_recent_searches'
+
+const tripType = ref<TripType>('roundtrip')
 const departureCity = ref('')
 const arrivalCity = ref('')
 const departureDate = ref('')
@@ -227,6 +270,184 @@ const fieldErrors = ref({
     returnDate: false
 })
 
+const recentSearches = ref<RecentTravelSearch[]>([])
+
+const formatSearchDate = (dateStr: string | null) => {
+    if (!dateStr) {
+        return ''
+    }
+
+    const parsedDate = new Date(dateStr)
+    if (Number.isNaN(parsedDate.getTime())) {
+        return dateStr
+    }
+
+    return new Intl.DateTimeFormat('es-ES', {
+        day: '2-digit',
+        month: 'short'
+    }).format(parsedDate)
+}
+
+const normalizeRecentSearch = (search: RecentTravelSearch) => {
+    return {
+        ...search,
+        returnDate: search.tripType === 'roundtrip' ? search.returnDate : null
+    }
+}
+
+const getLocalSearches = (): RecentTravelSearch[] => {
+    if (!import.meta.client) {
+        return []
+    }
+
+    try {
+        const raw = localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY)
+        if (!raw) {
+            return []
+        }
+        const parsed = JSON.parse(raw) as RecentTravelSearch[]
+        return Array.isArray(parsed) ? parsed : []
+    } catch (err) {
+        console.error('[travel_searches] No se pudieron leer las búsquedas locales', err)
+        return []
+    }
+}
+
+const setLocalSearches = (searches: RecentTravelSearch[]) => {
+    if (!import.meta.client) {
+        return
+    }
+    try {
+        localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(searches))
+    } catch (err) {
+        console.error('[travel_searches] No se pudieron guardar las búsquedas locales', err)
+    }
+}
+
+const updateRecentSearchesState = (entries: RecentTravelSearch[]) => {
+    recentSearches.value = entries.slice(0, MAX_RECENT_SEARCHES)
+}
+
+const persistRecentSearchLocally = (search: RecentTravelSearch) => {
+    if (!import.meta.client) {
+        return
+    }
+
+    const normalized = normalizeRecentSearch({
+        ...search,
+        id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
+        createdAt: new Date().toISOString()
+    })
+
+    const existing = getLocalSearches()
+    const updated = [normalized, ...existing].slice(0, MAX_RECENT_SEARCHES)
+    setLocalSearches(updated)
+    updateRecentSearchesState(updated)
+}
+
+const mapDbRowToRecentSearch = (row: Record<string, any>): RecentTravelSearch => ({
+    id: row.id,
+    departureCity: row.departure_city,
+    arrivalCity: row.arrival_city,
+    departureDate: row.departure_date,
+    returnDate: row.return_date ?? null,
+    tripType: row.trip_type,
+    includeAccommodation: row.include_accommodation ?? false,
+    createdAt: row.created_at
+})
+
+const fetchRecentSearchesFromSupabase = async (userId: string) => {
+    try {
+        const { data, error } = await supabase
+            .from('travel_searches')
+            .select('id, departure_city, arrival_city, departure_date, return_date, trip_type, include_accommodation, created_at')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(MAX_RECENT_SEARCHES)
+
+        if (error) {
+            throw error
+        }
+
+        if (data) {
+            updateRecentSearchesState(data.map(mapDbRowToRecentSearch))
+        }
+    } catch (err) {
+        console.error('[travel_searches] No se pudieron cargar datos de Supabase', err)
+    }
+}
+
+const loadRecentSearches = async () => {
+    if (!import.meta.client) {
+        return
+    }
+
+    const user = supabaseUser.value
+    if (user) {
+        await fetchRecentSearchesFromSupabase(user.id)
+    } else {
+        updateRecentSearchesState(getLocalSearches())
+    }
+}
+
+onMounted(async () => {
+    await loadRecentSearches()
+    
+    watch(
+        () => supabaseUser.value,
+        async () => {
+            await loadRecentSearches()
+        }
+    )
+})
+
+const persistTravelSearch = async (search: RecentTravelSearch) => {
+    const user = supabaseUser.value
+    if (user) {
+        try {
+            const { data, error } = await supabase
+                .from('travel_searches')
+                .insert({
+                    user_id: user.id,
+                    departure_city: search.departureCity,
+                    arrival_city: search.arrivalCity,
+                    departure_date: search.departureDate,
+                    return_date: search.tripType === 'roundtrip' ? search.returnDate : null,
+                    trip_type: search.tripType,
+                    include_accommodation: search.includeAccommodation
+                })
+                .select('id, departure_city, arrival_city, departure_date, return_date, trip_type, include_accommodation, created_at')
+                .single()
+
+            if (error) {
+                throw error
+            }
+
+            if (data) {
+                updateRecentSearchesState([
+                    mapDbRowToRecentSearch(data),
+                    ...recentSearches.value.filter((entry) => entry.id !== data.id)
+                ])
+            } else {
+                await fetchRecentSearchesFromSupabase(user.id)
+            }
+        } catch (err) {
+            console.error('[travel_searches] No se pudo guardar la búsqueda en Supabase', err)
+        }
+    } else {
+        persistRecentSearchLocally(search)
+    }
+}
+
+const buildRecentSearchPayload = (): RecentTravelSearch => ({
+    departureCity: departureCity.value,
+    arrivalCity: arrivalCity.value,
+    departureDate: departureDate.value,
+    returnDate: tripType.value === 'roundtrip' ? returnDate.value || null : null,
+    tripType: tripType.value,
+    includeAccommodation: includeAccommodation.value
+})
+
 const resetForm = () => {
     tripType.value = 'roundtrip'
     departureCity.value = ''
@@ -234,6 +455,22 @@ const resetForm = () => {
     departureDate.value = ''
     returnDate.value = ''
     includeAccommodation.value = false
+    error.value = null
+    fieldErrors.value = {
+        departureCity: false,
+        arrivalCity: false,
+        departureDate: false,
+        returnDate: false
+    }
+}
+
+const fillFormFromSearch = (search: RecentTravelSearch) => {
+    tripType.value = search.tripType
+    departureCity.value = search.departureCity
+    arrivalCity.value = search.arrivalCity
+    departureDate.value = search.departureDate
+    returnDate.value = search.returnDate || ''
+    includeAccommodation.value = search.includeAccommodation
     error.value = null
     fieldErrors.value = {
         departureCity: false,
@@ -295,11 +532,14 @@ const searchTrips = async () => {
         query.returnDate = returnDate.value
     }
 
+    const recentSearch = buildRecentSearchPayload()
+
     try {
         await router.push({
             path: '/results',
             query
         })
+        await persistTravelSearch(recentSearch)
     } catch (e: any) {
         error.value = e?.message || 'No se pudo redirigir a la página de resultados'
     } finally {

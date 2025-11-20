@@ -5,7 +5,9 @@
       "node"
     ]
   },
-  "files": [],
+  "files": [
+    "types/supabase.d.ts"
+  ],
   "references": [
     {
       "path": "./.nuxt/tsconfig.app.json"
