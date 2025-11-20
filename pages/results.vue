@@ -8,7 +8,10 @@
                     </div>
                     <h1 class="text-xl font-semibold">{{ brand.name }}</h1>
                 </div>
-                <NuxtLink to="/" class="text-sm text-muted-foreground hover:text-foreground transition">Nueva búsqueda</NuxtLink>
+                <div class="flex items-center gap-4">
+                    <NuxtLink to="/" class="text-sm text-muted-foreground hover:text-foreground transition">Nueva búsqueda</NuxtLink>
+                    <AuthNav />
+                </div>
             </div>
         </nav>
 

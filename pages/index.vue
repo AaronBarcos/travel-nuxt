@@ -9,11 +9,7 @@
                     </div>
                     <h1 class="text-xl font-semibold">{{ brand.name }}</h1>
                 </div>
-                <div class="flex items-center gap-6">
-                    <button class="text-sm text-muted-foreground hover:text-foreground transition">Iniciar sesión</button>
-                    <button
-                        class="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition">Crear cuenta</button>
-                </div>
+                <AuthNav />
             </div>
         </nav>
 
