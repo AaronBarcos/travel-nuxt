@@ -117,6 +117,17 @@
                             </p>
                             <p v-if="departureFlight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ departureFlight.flightNumber }}</p>
                         </div>
+                        <div class="mt-4" v-if="departureFlightLink">
+                            <a
+                                :href="departureFlightLink"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                            >
+                                Ver en Skyscanner
+                                <span aria-hidden="true">↗</span>
+                            </a>
+                        </div>
                     </div>
 
                     <div v-if="returnFlight" class="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition shadow-sm">
@@ -133,6 +144,17 @@
                                 <strong class="text-foreground">Escalas:</strong> {{ returnFlight.stops === 0 ? 'Directo' : `${returnFlight.stops} escala(s)` }}
                             </p>
                             <p v-if="returnFlight.flightNumber"><strong class="text-foreground">Vuelo:</strong> {{ returnFlight.flightNumber }}</p>
+                        </div>
+                        <div class="mt-4" v-if="returnFlightLink">
+                            <a
+                                :href="returnFlightLink"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                            >
+                                Ver en Skyscanner
+                                <span aria-hidden="true">↗</span>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -223,6 +245,9 @@ const accommodationsList = computed<Accommodation[]>(() => {
         : [results.accommodations]
 })
 
+const departureFlightLink = computed(() => getSkyscannerLink(departureFlight.value))
+const returnFlightLink = computed(() => getSkyscannerLink(returnFlight.value))
+
 const formatDate = (dateString: string) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -250,6 +275,68 @@ const formatPrice = (price: number, currency: string = 'EUR') => {
         style: 'currency',
         currency: currency
     }).format(price)
+}
+
+const formatSkyscannerDate = (dateString: string) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    if (Number.isNaN(date.getTime())) return ''
+    // Formato YYMMDD (ej: 251130 para 30 de noviembre de 2025)
+    const year = date.getFullYear().toString().slice(-2)
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const day = date.getDate().toString().padStart(2, '0')
+    return `${year}${month}${day}`
+}
+
+const getDepartureTimeRange = (dateString: string) => {
+    if (!dateString) return null
+    const date = new Date(dateString)
+    if (Number.isNaN(date.getTime())) return null
+    // Calcular minutos desde medianoche
+    const hours = date.getHours()
+    const minutes = date.getMinutes()
+    const totalMinutes = hours * 60 + minutes
+    // Crear franja de ±30 minutos
+    const start = Math.max(0, totalMinutes - 30)
+    const end = Math.min(1439, totalMinutes + 30)
+    return `${start}-${end}`
+}
+
+// Mapeo básico de códigos IATA de aerolíneas a IDs de Skyscanner
+const airlineCodeMap: Record<string, string> = {
+    'UX': '-32680', // Air Europa
+    'IB': '-32680', // Iberia (usar mismo código por ahora)
+    'VY': '-32680', // Vueling
+    'FR': '-32680', // Ryanair
+    'LH': '-32680', // Lufthansa
+    'KL': '-32680', // KLM
+    'BA': '-32680', // British Airways
+    'AF': '-32680', // Air France
+}
+
+const getSkyscannerLink = (flight: Flight | null) => {
+    if (!flight?.origin || !flight?.destination || !flight?.departure) return null
+    const outboundDate = formatSkyscannerDate(flight.departure)
+    if (!outboundDate) return null
+
+    const departureTimeRange = getDepartureTimeRange(flight.departure)
+    const airlineCode = airlineCodeMap[flight.airline] || '-32680' // Default a Air Europa si no está en el mapeo
+    const isDirect = flight.stops === 0
+
+    const params = new URLSearchParams({
+        adultsv2: '1',
+        cabinclass: 'economy',
+        childrenv2: '',
+        ref: 'home',
+        rtn: '0',
+        outboundaltsenabled: 'false',
+        inboundaltsenabled: 'false',
+        airlines: airlineCode,
+        'departure-times': departureTimeRange || '450-510',
+        preferdirects: isDirect ? 'true' : 'false'
+    })
+
+    return `https://www.skyscanner.es/transporte/vuelos/${flight.origin.toLowerCase()}/${flight.destination.toLowerCase()}/${outboundDate}/?${params.toString()}`
 }
 
 </script>

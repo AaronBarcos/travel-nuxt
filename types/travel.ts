@@ -9,7 +9,9 @@ export const FlightSchema = z.object({
   duration: z.string().describe('Duración del vuelo'),
   stops: z.number().describe('Número de escalas'),
   flightNumber: z.string().describe('Número de vuelo'),
-  aircraft: z.string().describe('Código del avión')
+  aircraft: z.string().describe('Código del avión'),
+  origin: z.string().describe('Código IATA de origen'),
+  destination: z.string().describe('Código IATA de destino')
 })
 
 export const AccommodationSchema = z.object({
