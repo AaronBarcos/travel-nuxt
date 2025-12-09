@@ -6,13 +6,11 @@ import {
   TravelSearchSchema
 } from '~/types/travel'
 
-const DEFAULT_MCP_SERVER_URL = 'https://travel-mcp.onrender.com/mcp'
-
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
   const apiKey = config.openaiApiKey || env?.OPENAI_API_KEY
-  const travelMcpUrl = config.travelMcpUrl || DEFAULT_MCP_SERVER_URL
+  const travelMcpUrl = config.travelMcpUrl
 
   if (!apiKey) {
     throw createError({
