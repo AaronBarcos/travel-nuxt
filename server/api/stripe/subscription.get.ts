@@ -27,8 +27,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  console.log('user', user.id)
-
   // Obtener suscripción activa
   const { data: subscription, error } = await supabase
     .from('subscriptions')
@@ -38,8 +36,6 @@ export default defineEventHandler(async (event) => {
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
-
-  console.log('subscription', subscription)
 
   if (error && error.code !== 'PGRST116') {
     throw createError({
