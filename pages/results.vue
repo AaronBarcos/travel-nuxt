@@ -171,7 +171,7 @@ const fetchResults = async () => {
             }
         }
 
-        const response = await $fetch('/api/test', {
+        const response = await $fetch('/api/generate-travel', {
             method: 'POST',
             body,
             headers

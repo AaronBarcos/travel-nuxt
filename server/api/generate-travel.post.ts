@@ -35,22 +35,30 @@ export default defineEventHandler(async (event) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (!authError && user) {
-      // Usuario logueado: consumir crédito desde la base de datos
-      const { data, error } = await supabase.rpc('consume_user_credit', {
-        user_id_param: user.id
+      // Verificar si el usuario tiene una suscripción activa
+      const { data: isSubscribed } = await supabase.rpc('is_user_subscribed', {
+        check_user_id: user.id
       })
 
-      if (error) {
-        if (error.code === 'P0001') {
+      // Si está suscrito, no consumir créditos
+      if (!isSubscribed) {
+        // Usuario logueado sin suscripción: consumir crédito desde la base de datos
+        const { data, error } = await supabase.rpc('consume_user_credit', {
+          user_id_param: user.id
+        })
+
+        if (error) {
+          if (error.code === 'P0001') {
+            throw createError({
+              statusCode: 403,
+              message: 'No tienes créditos suficientes para realizar esta búsqueda'
+            })
+          }
           throw createError({
-            statusCode: 403,
-            message: 'No tienes créditos suficientes para realizar esta búsqueda'
+            statusCode: 500,
+            message: 'Error al verificar créditos'
           })
         }
-        throw createError({
-          statusCode: 500,
-          message: 'Error al verificar créditos'
-        })
       }
     }
   } else if (_creditConsumed !== true) {

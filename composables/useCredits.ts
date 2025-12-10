@@ -3,10 +3,12 @@ const ANON_CREDITS_KEY = 'travel_anon_credits'
 const ANON_CREDITS_RESET_KEY = 'travel_anon_credits_reset'
 const DEFAULT_CREDITS = 2
 const CREDITS_RESET_HOURS = 24
+const INFINITE_CREDITS = 999999
 
 export const useCredits = () => {
   const supabase = useSupabaseClient()
   const supabaseUser = useSupabaseUser()
+  const { isSubscribed, fetchSubscription } = useSubscription()
 
   const getAnonUserId = (): string => {
     if (!import.meta.client) return ''
@@ -47,6 +49,11 @@ export const useCredits = () => {
   }
 
   const getCredits = async (): Promise<number> => {
+    // Si el usuario está suscrito, devolver créditos infinitos
+    if (isSubscribed.value) {
+      return INFINITE_CREDITS
+    }
+
     if (supabaseUser.value) {
       try {
         const { data, error } = await supabase
@@ -75,6 +82,11 @@ export const useCredits = () => {
   }
 
   const consumeCredit = async (): Promise<{ success: boolean; remaining: number; error?: string }> => {
+    // Si el usuario está suscrito, no consumir créditos
+    if (isSubscribed.value) {
+      return { success: true, remaining: INFINITE_CREDITS }
+    }
+
     if (supabaseUser.value) {
       try {
         const { data, error } = await supabase.rpc('consume_user_credit', {
@@ -106,11 +118,14 @@ export const useCredits = () => {
 
   const credits = ref(0)
   const loading = ref(false)
+  const hasUnlimitedCredits = computed(() => isSubscribed.value)
 
   const refreshCredits = async () => {
     if (!import.meta.client) return
     loading.value = true
     try {
+      // Primero actualizar estado de suscripción
+      await fetchSubscription()
       credits.value = await getCredits()
     } catch (err) {
       console.error('[credits] Error refrescando créditos:', err)
@@ -129,11 +144,20 @@ export const useCredits = () => {
         refreshCredits()
       }
     )
+
+    // También actualizar cuando cambie el estado de suscripción
+    watch(
+      () => isSubscribed.value,
+      () => {
+        refreshCredits()
+      }
+    )
   }
 
   return {
     credits: readonly(credits),
     loading: readonly(loading),
+    hasUnlimitedCredits,
     refreshCredits,
     consumeCredit,
     getCredits
