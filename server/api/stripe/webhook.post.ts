@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   // Usar service role para operaciones de webhook (bypass RLS)
   const supabase = createClient(
     config.public.supabaseUrl,
-    config.supabaseServiceRoleKey
+    config.public.supabaseAnonKey
   )
 
   const signature = event.headers.get('stripe-signature')
@@ -144,37 +144,52 @@ async function handleSubscriptionDeleted(
   }
 }
 
+// Convierte timestamp Unix o Date a ISO string de forma segura
+function toISOStringSafe(value: unknown): string | null {
+  if (!value) return null
+  
+  // Si es un número (timestamp Unix en segundos)
+  if (typeof value === 'number') {
+    const date = new Date(value * 1000)
+    return isNaN(date.getTime()) ? null : date.toISOString()
+  }
+  
+  // Si es un string, intentar parsearlo
+  if (typeof value === 'string') {
+    const date = new Date(value)
+    return isNaN(date.getTime()) ? null : date.toISOString()
+  }
+  
+  // Si es un Date
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? null : value.toISOString()
+  }
+  
+  return null
+}
+
 async function upsertSubscription(
   supabase: SupabaseClient,
   userId: string,
   subscription: Stripe.Subscription
 ) {
-  // Acceder a las propiedades usando any para evitar errores de tipo
-  const sub = subscription as unknown as {
-    id: string
-    customer: string
-    items: { data: Array<{ price: { id: string } }> }
-    status: string
-    current_period_start: number
-    current_period_end: number
-    cancel_at_period_end: boolean
-    canceled_at: number | null
-  }
+  // Acceder a las propiedades usando Record para evitar errores de tipo
+  const sub = subscription as unknown as Record<string, unknown>
 
   const subscriptionData = {
     user_id: userId,
-    stripe_subscription_id: sub.id,
-    stripe_customer_id: sub.customer,
-    stripe_price_id: sub.items.data[0]?.price.id,
-    status: sub.status,
-    current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-    cancel_at_period_end: sub.cancel_at_period_end,
-    canceled_at: sub.canceled_at 
-      ? new Date(sub.canceled_at * 1000).toISOString() 
-      : null,
+    stripe_subscription_id: sub.id as string,
+    stripe_customer_id: (sub.customer as string) || '',
+    stripe_price_id: ((sub.items as { data: Array<{ price: { id: string } }> })?.data?.[0]?.price?.id) || '',
+    status: (sub.status as string) || 'incomplete',
+    current_period_start: toISOStringSafe(sub.current_period_start),
+    current_period_end: toISOStringSafe(sub.current_period_end),
+    cancel_at_period_end: Boolean(sub.cancel_at_period_end),
+    canceled_at: toISOStringSafe(sub.canceled_at),
     updated_at: new Date().toISOString()
   }
+
+  console.log('[stripe webhook] Guardando suscripción:', subscriptionData)
 
   const { error } = await supabase
     .from('subscriptions')
