@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['nuxt-mcp', '@nuxtjs/tailwindcss', '@unlok-co/nuxt-stripe'],
+  modules: ['@nuxt/ui', 'nuxt-mcp', '@unlok-co/nuxt-stripe'],
   css: ['~/assets/css/main.css'],
   nitro: {
     esbuild: {
@@ -33,10 +33,7 @@ export default defineNuxtConfig({
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://skyai.travel'),
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
-      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || '',
-      stripe: {
-        key: process.env.STRIPE_PUBLIC_KEY
-      }
+      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY || ''
     }
   },
   stripe: {
@@ -56,5 +53,13 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#1d4ed8' }
       ]
     }
+  },
+  icon: {
+    customCollections: [
+      {
+        prefix: 'custom',
+        dir: './assets/icons'
+      }
+    ]
   }
 })

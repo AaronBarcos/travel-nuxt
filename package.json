@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
+    "@nuxt/ui": "^4.2.1",
     "@supabase/supabase-js": "^2.84.0",
     "@unlok-co/nuxt-stripe": "^5.0.0",
     "nuxt": "^4.2.1",
@@ -21,11 +22,9 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "^6.14.0",
     "@types/node": "^24.10.1",
     "autoprefixer": "^10.4.22",
     "postcss": "^8.5.6",
-    "supabase": "^2.58.5",
-    "tailwindcss": "^3.4.18"
+    "supabase": "^2.58.5"
   }
 }

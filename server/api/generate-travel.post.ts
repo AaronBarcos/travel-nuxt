@@ -1,10 +1,10 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { createClient } from '@supabase/supabase-js'
-import {
-  TravelRecommendationSchema,
-  TravelSearchSchema
-} from '~/types/travel'
+// import {
+//   TravelRecommendationSchema,
+//   TravelSearchSchema
+// } from '~/types/travel'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
