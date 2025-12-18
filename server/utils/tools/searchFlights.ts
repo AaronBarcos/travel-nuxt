@@ -169,6 +169,8 @@ export async function searchFlightsHandler(args: any) {
     };
     
     const results = await searchFlights(flightParams);
+
+    console.log('🛫 Results:', results);
     
     return {
       content: [

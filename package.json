@@ -10,21 +10,21 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.24.3",
-    "@nuxt/ui": "^4.2.1",
-    "@supabase/supabase-js": "^2.84.0",
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@nuxt/ui": "^4.3.0",
+    "@supabase/supabase-js": "^2.88.0",
     "@unlok-co/nuxt-stripe": "^5.0.0",
-    "nuxt": "^4.2.1",
+    "nuxt": "^4.2.2",
     "nuxt-mcp": "^0.2.6",
-    "openai": "^6.9.0",
-    "vue": "^3.5.22",
-    "vue-router": "^4.6.3",
-    "zod": "^4.1.12"
+    "openai": "^6.14.0",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.4",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "autoprefixer": "^10.4.22",
+    "@types/node": "^25.0.3",
+    "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
-    "supabase": "^2.58.5"
+    "supabase": "^2.67.2"
   }
 }

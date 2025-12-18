@@ -217,6 +217,8 @@ export async function searchAccommodationHandler(args: any) {
       guests: args.guests,
       budget: args.budget
     });
+
+    console.log('🏨 Results:', results);
     
     return {
       content: [
